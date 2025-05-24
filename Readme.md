@@ -1,4 +1,3 @@
-
 # Go Clean Architecture サンプルアプリ (TODO)
 
 以下は、Gin を用いたシンプルな TODO 管理アプリのディレクトリ構成とコード例です。
@@ -32,9 +31,9 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "myapp/internal/infrastructure/persistence"
-    "myapp/internal/interface/web"
-    "myapp/internal/usecase"
+    "github.com/PlasmaXD/CleanArchitecture/internal/infrastructure/persistence"
+    "github.com/PlasmaXD/CleanArchitecture/internal/interface/web"
+    "github.com/PlasmaXD/CleanArchitecture/internal/usecase"
 )
 
 func main() {
@@ -85,7 +84,9 @@ type TodoRepository interface {
 ```go
 package usecase
 
-import "myapp/internal/domain"
+import (
+    "github.com/PlasmaXD/CleanArchitecture/internal/domain"
+)
 
 type TodoUseCase interface {
     CreateTodo(title string) (*domain.Todo, error)
@@ -121,7 +122,7 @@ package handler
 
 import (
     "net/http"
-    "myapp/internal/usecase"
+    "github.com/PlasmaXD/CleanArchitecture/internal/usecase"
     "github.com/gin-gonic/gin"
 )
 
@@ -163,7 +164,7 @@ package web
 
 import (
     "github.com/gin-gonic/gin"
-    "myapp/internal/interface/web/handler"
+    "github.com/PlasmaXD/CleanArchitecture/internal/interface/web/handler"
 )
 
 func RegisterRoutes(r *gin.Engine, h *handler.TodoHandler) {
@@ -183,7 +184,7 @@ package persistence
 
 import (
     "errors"
-    "myapp/internal/domain"
+    "github.com/PlasmaXD/CleanArchitecture/internal/domain"
 )
 
 type todoRepository struct {
@@ -209,7 +210,3 @@ func (r *todoRepository) GetAll() ([]*domain.Todo, error) {
     return r.store, nil
 }
 ```
-
----
-
-この構成をベースに、データベース接続やミドルウェアの追加、テストコードの整備などを行ってください。必要に応じてフィードバックをお願いいたします。
