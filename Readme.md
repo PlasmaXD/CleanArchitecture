@@ -1,6 +1,6 @@
-# Go Clean Architecture サンプルアプリ (TODO)
+# Go Clean Architecture サンプルアプリ (TODO) with Delete
 
-以下は、Gin を用いたシンプルな TODO 管理アプリのディレクトリ構成とコード例です。
+以下は、Gin を用いたシンプルな TODO 管理アプリに「削除機能 (Delete)」を加えた例です。
 
 ```
 .
@@ -25,7 +25,7 @@
 
 ---
 
-// cmd/app/main.go
+## cmd/app/main.go
 ```go
 package main
 
@@ -57,7 +57,7 @@ func main() {
 
 ---
 
-// internal/domain/todo.go
+## internal/domain/todo.go
 ```go
 package domain
 
@@ -68,29 +68,32 @@ type Todo struct {
 }
 ```
 
-// internal/domain/todo_repository.go
+## internal/domain/todo_repository.go
 ```go
 package domain
 
 type TodoRepository interface {
     Create(todo *Todo) error
     GetAll() ([]*Todo, error)
+    Delete(id int64) error    // 削除追加
 }
 ```
 
 ---
 
-// internal/usecase/todo_usecase.go
+## internal/usecase/todo_usecase.go
 ```go
 package usecase
 
 import (
+    "errors"
     "github.com/PlasmaXD/CleanArchitecture/internal/domain"
 )
 
 type TodoUseCase interface {
     CreateTodo(title string) (*domain.Todo, error)
     ListTodos() ([]*domain.Todo, error)
+    DeleteTodo(id int64) error    // 削除追加
 }
 
 type todoUseCase struct {
@@ -102,6 +105,9 @@ func NewTodoUseCase(r domain.TodoRepository) TodoUseCase {
 }
 
 func (u *todoUseCase) CreateTodo(title string) (*domain.Todo, error) {
+    if title == "" {
+        return nil, errors.New("title is empty")
+    }
     todo := &domain.Todo{Title: title}
     if err := u.repo.Create(todo); err != nil {
         return nil, err
@@ -112,16 +118,22 @@ func (u *todoUseCase) CreateTodo(title string) (*domain.Todo, error) {
 func (u *todoUseCase) ListTodos() ([]*domain.Todo, error) {
     return u.repo.GetAll()
 }
+
+func (u *todoUseCase) DeleteTodo(id int64) error {
+    return u.repo.Delete(id)
+}
 ```
 
 ---
 
-// internal/interface/web/handler/todo_handler.go
+## internal/interface/web/handler/todo_handler.go
 ```go
 package handler
 
 import (
     "net/http"
+    "strconv"
+
     "github.com/PlasmaXD/CleanArchitecture/internal/usecase"
     "github.com/gin-gonic/gin"
 )
@@ -156,9 +168,23 @@ func (h *TodoHandler) List(c *gin.Context) {
     }
     c.JSON(http.StatusOK, todos)
 }
+
+func (h *TodoHandler) Delete(c *gin.Context) {
+    idParam := c.Param("id")
+    id, err := strconv.ParseInt(idParam, 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+        return
+    }
+    if err := h.uc.DeleteTodo(id); err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+        return
+    }
+    c.Status(http.StatusNoContent)
+}
 ```
 
-// internal/interface/web/router.go
+## internal/interface/web/router.go
 ```go
 package web
 
@@ -172,13 +198,14 @@ func RegisterRoutes(r *gin.Engine, h *handler.TodoHandler) {
     {
         api.POST("/todos", h.Create)
         api.GET("/todos", h.List)
+        api.DELETE("/todos/:id", h.Delete)  // 削除ルート追加
     }
 }
 ```
 
 ---
 
-// internal/infrastructure/persistence/todo_repository.go
+## internal/infrastructure/persistence/todo_repository.go
 ```go
 package persistence
 
@@ -197,9 +224,6 @@ func NewTodoRepository() domain.TodoRepository {
 }
 
 func (r *todoRepository) Create(todo *domain.Todo) error {
-    if todo.Title == "" {
-        return errors.New("title is empty")
-    }
     todo.ID = r.nextID
     r.nextID++
     r.store = append(r.store, todo)
@@ -209,7 +233,19 @@ func (r *todoRepository) Create(todo *domain.Todo) error {
 func (r *todoRepository) GetAll() ([]*domain.Todo, error) {
     return r.store, nil
 }
+
+func (r *todoRepository) Delete(id int64) error {
+    for i, t := range r.store {
+        if t.ID == id {
+            // スライスから要素を削除
+            r.store = append(r.store[:i], r.store[i+1:]...)
+            return nil
+        }
+    }
+    return errors.New("todo not found")
+}
 ```
+
 
 
 以下の手順で起動できます。※Go 1.18 以上がインストールされている前提です。
