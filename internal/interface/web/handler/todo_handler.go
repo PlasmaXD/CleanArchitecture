@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"myapp/internal/usecase"
 	"net/http"
 
+	"github.com/PlasmaXD/CleanArchitecture/internal/usecase"
 	"github.com/gin-gonic/gin"
 )
 

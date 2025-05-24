@@ -2,7 +2,8 @@ package persistence
 
 import (
 	"errors"
-	"myapp/internal/domain"
+
+	"github.com/PlasmaXD/CleanArchitecture/internal/domain"
 )
 
 type todoRepository struct {
