@@ -1,7 +1,5 @@
-# Go Clean Architecture サンプルアプリ (TODO) with Delete
-
-以下は、Gin を用いたシンプルな TODO 管理アプリに「削除機能 (Delete)」を加えた例です。
-
+# Go Clean Architecture サンプルアプリ (TODO)
+Gin を用いたシンプルな TODO 管理アプリ 
 ```
 .
 ├── cmd
